@@ -40,18 +40,43 @@
       "title": "Design system color palette update",
       "description": "Update the design system to include new color palette with improved accessibility.",
       "projectId": "2",
-      "status": "in-progress",
+      "status": "todo",
       "priority": "high",
       "dueDate": "2025-01-20",
-      "tags": ["design", "accessibility"],
+      "tags": [
+        "design",
+        "accessibility"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Audit current color tokens", "completed": true },
-        { "id": "2", "title": "Create new color palette", "completed": true },
-        { "id": "3", "title": "Test contrast ratios", "completed": false }
+        {
+          "id": "1",
+          "title": "Audit current color tokens",
+          "completed": true
+        },
+        {
+          "id": "2",
+          "title": "Create new color palette",
+          "completed": true
+        },
+        {
+          "id": "3",
+          "title": "Test contrast ratios",
+          "completed": false
+        }
       ],
       "comments": [
-        { "id": "1", "author": "Alice", "content": "The new palette looks great!", "createdAt": "2025-01-15T10:30:00Z" },
-        { "id": "2", "author": "John", "content": "Let's finalize the contrast ratios.", "createdAt": "2025-01-15T11:45:00Z" }
+        {
+          "id": "1",
+          "author": "Alice",
+          "content": "The new palette looks great!",
+          "createdAt": "2025-01-15T10:30:00Z"
+        },
+        {
+          "id": "2",
+          "author": "John",
+          "content": "Let's finalize the contrast ratios.",
+          "createdAt": "2025-01-15T11:45:00Z"
+        }
       ]
     },
     {
@@ -62,10 +87,21 @@
       "status": "todo",
       "priority": "medium",
       "dueDate": "2025-01-25",
-      "tags": ["documentation", "api"],
+      "tags": [
+        "documentation",
+        "api"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Document auth endpoints", "completed": false },
-        { "id": "2", "title": "Add examples", "completed": false }
+        {
+          "id": "1",
+          "title": "Document auth endpoints",
+          "completed": false
+        },
+        {
+          "id": "2",
+          "title": "Add examples",
+          "completed": false
+        }
       ],
       "comments": []
     },
@@ -77,13 +113,29 @@
       "status": "done",
       "priority": "low",
       "dueDate": "2025-01-10",
-      "tags": ["research", "ux"],
+      "tags": [
+        "research",
+        "ux"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Transcribe interviews", "completed": true },
-        { "id": "2", "title": "Create presentation", "completed": true }
+        {
+          "id": "1",
+          "title": "Transcribe interviews",
+          "completed": true
+        },
+        {
+          "id": "2",
+          "title": "Create presentation",
+          "completed": true
+        }
       ],
       "comments": [
-        { "id": "1", "author": "Mike", "content": "Great insights!", "createdAt": "2025-01-10T16:00:00Z" }
+        {
+          "id": "1",
+          "author": "Mike",
+          "content": "Great insights!",
+          "createdAt": "2025-01-10T16:00:00Z"
+        }
       ]
     },
     {
@@ -94,10 +146,21 @@
       "status": "in-progress",
       "priority": "high",
       "dueDate": "2025-01-22",
-      "tags": ["performance", "frontend"],
+      "tags": [
+        "performance",
+        "frontend"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Audit performance", "completed": true },
-        { "id": "2", "title": "Implement code splitting", "completed": false }
+        {
+          "id": "1",
+          "title": "Audit performance",
+          "completed": true
+        },
+        {
+          "id": "2",
+          "title": "Implement code splitting",
+          "completed": false
+        }
       ],
       "comments": []
     },
@@ -109,10 +172,21 @@
       "status": "todo",
       "priority": "medium",
       "dueDate": "2025-01-28",
-      "tags": ["marketing", "email"],
+      "tags": [
+        "marketing",
+        "email"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Write copy", "completed": false },
-        { "id": "2", "title": "Design template", "completed": false }
+        {
+          "id": "1",
+          "title": "Write copy",
+          "completed": false
+        },
+        {
+          "id": "2",
+          "title": "Design template",
+          "completed": false
+        }
       ],
       "comments": []
     },
@@ -124,14 +198,34 @@
       "status": "in-progress",
       "priority": "high",
       "dueDate": "2025-01-18",
-      "tags": ["design", "mobile"],
+      "tags": [
+        "design",
+        "mobile"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Onboarding flow", "completed": true },
-        { "id": "2", "title": "Dashboard screens", "completed": true },
-        { "id": "3", "title": "Settings screens", "completed": false }
+        {
+          "id": "1",
+          "title": "Onboarding flow",
+          "completed": true
+        },
+        {
+          "id": "2",
+          "title": "Dashboard screens",
+          "completed": true
+        },
+        {
+          "id": "3",
+          "title": "Settings screens",
+          "completed": false
+        }
       ],
       "comments": [
-        { "id": "1", "author": "Sarah", "content": "Onboarding looks fantastic!", "createdAt": "2025-01-12T16:00:00Z" }
+        {
+          "id": "1",
+          "author": "Sarah",
+          "content": "Onboarding looks fantastic!",
+          "createdAt": "2025-01-12T16:00:00Z"
+        }
       ]
     },
     {
@@ -142,10 +236,21 @@
       "status": "todo",
       "priority": "high",
       "dueDate": "2025-02-05",
-      "tags": ["backend", "database"],
+      "tags": [
+        "backend",
+        "database"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Schema conversion", "completed": false },
-        { "id": "2", "title": "Data migration", "completed": false }
+        {
+          "id": "1",
+          "title": "Schema conversion",
+          "completed": false
+        },
+        {
+          "id": "2",
+          "title": "Data migration",
+          "completed": false
+        }
       ],
       "comments": []
     },
@@ -157,10 +262,21 @@
       "status": "done",
       "priority": "medium",
       "dueDate": "2025-01-08",
-      "tags": ["marketing", "social"],
+      "tags": [
+        "marketing",
+        "social"
+      ],
       "subtasks": [
-        { "id": "1", "title": "Content themes", "completed": true },
-        { "id": "2", "title": "Schedule posts", "completed": true }
+        {
+          "id": "1",
+          "title": "Content themes",
+          "completed": true
+        },
+        {
+          "id": "2",
+          "title": "Schedule posts",
+          "completed": true
+        }
       ],
       "comments": []
     }
