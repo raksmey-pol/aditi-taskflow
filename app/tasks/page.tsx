@@ -1,63 +1,89 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import tasks from "../db/tasks.json";
-import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  projectId: string;
+  status: string;
+  priority: string;
+  dueDate: string;
+  tags: string[];
+  subtasks?: Array<{ id: string; title: string; completed: boolean }>;
+}
 
 export default function TasksList() {
   const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch("/api/tasks");
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        console.error("Failed to fetch tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchTasks();
   }, []);
 
   if (loading) {
     return (
       <div className="grid place-items-center h-screen">
-        <Spinner className="size-16"/>
+        <Spinner className="size-16" />
       </div>
     );
   }
 
   return (
-    <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-6">
-      {tasks.map((task) => (
-        <div key={task.id} className="">
-          <Card>
-            <CardHeader className="flex">
-            <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-              <CardTitle>{task.title}
-            </CardTitle>
-            <Badge className="space-x-1.5">Badge</Badge>
-            </CardHeader>
-            <CardContent>
-            <p className="text-gray-500">{task.remark}</p>
-            </CardContent>
-            <div className="flex items-start justify-between mx-4">
-              <div className="flex items-start">
-                <Button className=" bg-blue-700">View</Button>
-              </div>
-              <div className="flex items-start gap-2">
-                <Checkbox />
-              <Label>Completed?</Label>
+    <div className="p-4">
+      <div className="flex">
+        <div className="flex gap-3">
+          <Button variant="outline">All</Button>
+          <Button variant="outline">Todo</Button>
+          <Button variant="outline">In Progress</Button>
+          <Button variant="outline">Done</Button>
+        </div>
+
+        <div className="relative ml-auto">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="w-50 pl-10" placeholder="Search tasks..."></Input>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-4">
+        {tasks.length === 0 ? (
+          <p className="text-muted-foreground">No tasks found</p>
+        ) : (
+          tasks.map((task) => (
+            <div key={task.id} className="p-4 border rounded-lg">
+              <h3 className="font-semibold">{task.title}</h3>
+              <p className="text-sm text-muted-foreground">
+                {task.description}
+              </p>
+              <div className="mt-2 flex gap-2">
+                <span className="text-xs px-2 py-1 rounded bg-secondary">
+                  {task.status}
+                </span>
+                <span className="text-xs px-2 py-1 rounded bg-secondary">
+                  {task.priority}
+                </span>
               </div>
             </div>
-          </Card>
-        </div>
-      ))}
+          ))
+        )}
+      </div>
     </div>
   );
 }

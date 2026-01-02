@@ -8,10 +8,10 @@ export async function GET() {
     const fileContents = fs.readFileSync(filePath, "utf8");
     const data = JSON.parse(fileContents);
 
-    return NextResponse.json(data.tasks);
+    return NextResponse.json(data.projects);
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch tasks" },
+      { error: "Failed to fetch projects" },
       { status: 500 }
     );
   }

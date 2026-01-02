@@ -49,9 +49,10 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
-          {/* <LayoutDashboard className="h-6 w-6" /> */}
-          <span className="text-lg font-semibold">Task Manager</span>
+          <LayoutDashboard className="h-6 w-6" />
+          <span className="text-lg font-semibold">TaskFlow</span>
         </div>
+        <hr></hr>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
