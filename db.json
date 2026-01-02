@@ -1,0 +1,168 @@
+{
+  "projects": [
+    {
+      "id": "1",
+      "slug": "marketing-campaign",
+      "name": "Marketing Campaign",
+      "description": "Q1 marketing initiatives and brand awareness campaigns across all digital channels.",
+      "color": "bg-pink-500",
+      "status": "active",
+      "tasksTotal": 8,
+      "tasksCompleted": 5,
+      "dueDate": "2025-03-31"
+    },
+    {
+      "id": "2",
+      "slug": "product-launch",
+      "name": "Product Launch",
+      "description": "New product release including design system and mobile app development.",
+      "color": "bg-blue-500",
+      "status": "active",
+      "tasksTotal": 12,
+      "tasksCompleted": 7,
+      "dueDate": "2025-02-15"
+    },
+    {
+      "id": "3",
+      "slug": "engineering",
+      "name": "Engineering",
+      "description": "Technical infrastructure improvements and backend optimization.",
+      "color": "bg-emerald-500",
+      "status": "active",
+      "tasksTotal": 10,
+      "tasksCompleted": 4,
+      "dueDate": "2025-04-30"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Design system color palette update",
+      "description": "Update the design system to include new color palette with improved accessibility.",
+      "projectId": "2",
+      "status": "in-progress",
+      "priority": "high",
+      "dueDate": "2025-01-20",
+      "tags": ["design", "accessibility"],
+      "subtasks": [
+        { "id": "1", "title": "Audit current color tokens", "completed": true },
+        { "id": "2", "title": "Create new color palette", "completed": true },
+        { "id": "3", "title": "Test contrast ratios", "completed": false }
+      ],
+      "comments": [
+        { "id": "1", "author": "Alice", "content": "The new palette looks great!", "createdAt": "2025-01-15T10:30:00Z" },
+        { "id": "2", "author": "John", "content": "Let's finalize the contrast ratios.", "createdAt": "2025-01-15T11:45:00Z" }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "API documentation",
+      "description": "Comprehensive documentation update for all REST API endpoints.",
+      "projectId": "3",
+      "status": "todo",
+      "priority": "medium",
+      "dueDate": "2025-01-25",
+      "tags": ["documentation", "api"],
+      "subtasks": [
+        { "id": "1", "title": "Document auth endpoints", "completed": false },
+        { "id": "2", "title": "Add examples", "completed": false }
+      ],
+      "comments": []
+    },
+    {
+      "id": "3",
+      "title": "User research analysis",
+      "description": "Compile findings from recent user interviews.",
+      "projectId": "1",
+      "status": "done",
+      "priority": "low",
+      "dueDate": "2025-01-10",
+      "tags": ["research", "ux"],
+      "subtasks": [
+        { "id": "1", "title": "Transcribe interviews", "completed": true },
+        { "id": "2", "title": "Create presentation", "completed": true }
+      ],
+      "comments": [
+        { "id": "1", "author": "Mike", "content": "Great insights!", "createdAt": "2025-01-10T16:00:00Z" }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Performance optimization",
+      "description": "Improve dashboard page load times to under 2 seconds.",
+      "projectId": "3",
+      "status": "in-progress",
+      "priority": "high",
+      "dueDate": "2025-01-22",
+      "tags": ["performance", "frontend"],
+      "subtasks": [
+        { "id": "1", "title": "Audit performance", "completed": true },
+        { "id": "2", "title": "Implement code splitting", "completed": false }
+      ],
+      "comments": []
+    },
+    {
+      "id": "5",
+      "title": "Newsletter campaign",
+      "description": "Design and send monthly newsletter to subscribers.",
+      "projectId": "1",
+      "status": "todo",
+      "priority": "medium",
+      "dueDate": "2025-01-28",
+      "tags": ["marketing", "email"],
+      "subtasks": [
+        { "id": "1", "title": "Write copy", "completed": false },
+        { "id": "2", "title": "Design template", "completed": false }
+      ],
+      "comments": []
+    },
+    {
+      "id": "6",
+      "title": "Mobile app wireframes",
+      "description": "Create wireframes for iOS and Android app.",
+      "projectId": "2",
+      "status": "in-progress",
+      "priority": "high",
+      "dueDate": "2025-01-18",
+      "tags": ["design", "mobile"],
+      "subtasks": [
+        { "id": "1", "title": "Onboarding flow", "completed": true },
+        { "id": "2", "title": "Dashboard screens", "completed": true },
+        { "id": "3", "title": "Settings screens", "completed": false }
+      ],
+      "comments": [
+        { "id": "1", "author": "Sarah", "content": "Onboarding looks fantastic!", "createdAt": "2025-01-12T16:00:00Z" }
+      ]
+    },
+    {
+      "id": "7",
+      "title": "Database migration",
+      "description": "Migrate from MySQL to PostgreSQL.",
+      "projectId": "3",
+      "status": "todo",
+      "priority": "high",
+      "dueDate": "2025-02-05",
+      "tags": ["backend", "database"],
+      "subtasks": [
+        { "id": "1", "title": "Schema conversion", "completed": false },
+        { "id": "2", "title": "Data migration", "completed": false }
+      ],
+      "comments": []
+    },
+    {
+      "id": "8",
+      "title": "Social media calendar",
+      "description": "Plan Q1 social media content.",
+      "projectId": "1",
+      "status": "done",
+      "priority": "medium",
+      "dueDate": "2025-01-08",
+      "tags": ["marketing", "social"],
+      "subtasks": [
+        { "id": "1", "title": "Content themes", "completed": true },
+        { "id": "2", "title": "Schedule posts", "completed": true }
+      ],
+      "comments": []
+    }
+  ]
+}
