@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Task } from "../interfaces/task.interface";
 import { Project } from "../interfaces/project.interface";
 import formattedDate from "../utils/date.util";
+import { useTopBarStore } from "../stores/task-topbar.store";
 
 export default function TasksList() {
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,24 @@ export default function TasksList() {
 
     fetchTasks();
   }, []);
+
+    const setTopBar = useTopBarStore((s) => s.setActions);
+    useEffect(() => {
+    setTopBar({
+      total_tasks: <div><h1 className="font-bold text-xl">Tasks</h1><p>{tasks.length} total tasks</p></div>,
+      actions: <Button>Add Task</Button>
+    });
+
+    return () => clearTopBar();
+  }, [tasks.length]);
+
+
+  function clearTopBar() {
+    useTopBarStore.getState().setActions({
+      total_tasks: null,
+      actions: null
+    });
+  }
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -184,14 +203,6 @@ export default function TasksList() {
                     <p className="text-sm text-muted-foreground">
                       {task.description}
                     </p>
-                    <div className="mt-2 flex gap-2">
-                      <span className="text-xs px-2 py-1 rounded bg-secondary">
-                        {task.status}
-                      </span>
-                      <span className="text-xs px-2 py-1 rounded bg-secondary">
-                        {task.priority}
-                      </span>
-                    </div>
                   </div>
                 </div>
                 <div className="flex gap-3">
