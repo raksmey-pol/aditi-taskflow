@@ -1,3 +1,4 @@
+import { Task } from "@/validations/task.schema";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -47,4 +48,20 @@ export async function PATCH(request: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function createTask(task: Task): Promise<Task> {
+  const res = await fetch("http://localhost:3001/tasks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(task),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to create task")
+  }
+
+  return res.json()
 }

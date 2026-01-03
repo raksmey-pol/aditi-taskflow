@@ -1,108 +1,150 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
-import { Calendar, Flag, MessageSquare, Paperclip, Search } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Task } from "../interfaces/task.interface";
-import { Project } from "../interfaces/project.interface";
-import formattedDate from "../utils/date.util";
-import { useTopBarStore } from "../stores/task-topbar.store";
+
+import {
+  Calendar,
+  MessageSquare,
+  Paperclip,
+  Search,
+} from "lucide-react";
+
+import { useEffect, useMemo } from "react";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+
+import { cn } from "@/lib/utils";
+import formattedDate from "@/utils/date.util";
+import { useTopBarStore } from "@/stores/task-topbar.store";
+import { Task } from "@/interfaces/task.interface";
+import { Project } from "@/interfaces/project.interface";
+import { renderBadge } from "@/utils/render-badge.util";
+import { renderPriorityFlag } from "@/utils/render-priority.util";
+import Link from "next/link";
+
+/* ---------------------- Queries ---------------------- */
+
+const fetchTasks = async (): Promise<Task[]> => {
+  const res = await fetch("/api/tasks");
+  if (!res.ok) throw new Error("Failed to fetch tasks");
+  return res.json();
+};
+
+const fetchProjects = async (): Promise<Project[]> => {
+  const res = await fetch("/api/projects");
+  if (!res.ok) throw new Error("Failed to fetch projects");
+  return res.json();
+};
+
+/* ---------------------- Component ---------------------- */
 
 export default function TasksList() {
-  const [loading, setLoading] = useState(true);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const queryClient = useQueryClient();
+  const setTopBar = useTopBarStore((s) => s.setActions);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch("/api/tasks");
-        const data = await response.json();
-        setTasks(data);
-      } catch (error) {
-        console.error("Failed to fetch tasks:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  /* ---------- Queries ---------- */
 
-    fetchTasks();
-  }, []);
+  const {
+    data: tasks = [],
+    isLoading: tasksLoading,
+    isError: tasksError,
+  } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: fetchTasks,
+  });
 
-    const setTopBar = useTopBarStore((s) => s.setActions);
-    useEffect(() => {
-    setTopBar({
-      total_tasks: <div><h1 className="font-bold text-xl">Tasks</h1><p>{tasks.length} total tasks</p></div>,
-      actions: <Button>Add Task</Button>
-    });
+  const {
+    data: projects = [],
+    isLoading: projectsLoading,
+    isError: projectsError,
+  } = useQuery({
+    queryKey: ["projects"],
+    queryFn: fetchProjects,
+  });
 
-    return () => clearTopBar();
-  }, [tasks.length]);
+  /* ---------- Project lookup (O(1)) ---------- */
 
+  const projectMap = useMemo(() => {
+    return new Map(projects.map((p) => [p.id, p.name]));
+  }, [projects]);
 
-  function clearTopBar() {
-    useTopBarStore.getState().setActions({
-      total_tasks: null,
-      actions: null
-    });
-  }
+  const projectName = (id: string) =>
+    projectMap.get(id) ?? "Project not found";
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch("/api/projects");
-        const data = await response.json();
-        setProjects(data);
-      } catch (error) {
-        console.error("Failed to fetch projects:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  /* ---------- Mutation (optimistic update) ---------- */
 
-    fetchProjects();
-  }, []);
-
-  const handleCheckboxChange = async (
-    taskId: string,
-    currentStatus: string
-  ) => {
-    const newStatus = currentStatus === "done" ? "todo" : "done";
-
-    // Optimistic update
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    );
-
-    try {
-      const response = await fetch("/api/tasks", {
+  const updateTaskStatus = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: string;
+    }) => {
+      const res = await fetch("/api/tasks", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: taskId, status: newStatus }),
+        body: JSON.stringify({ id, status }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update task");
-      }
-    } catch (error) {
-      console.error("Failed to update task:", error);
-      // Revert on error
-      setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === taskId ? { ...task, status: currentStatus } : task
+      if (!res.ok) throw new Error("Update failed");
+    },
+
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["tasks"] });
+
+      const previousTasks =
+        queryClient.getQueryData<Task[]>(["tasks"]);
+
+      queryClient.setQueryData<Task[]>(["tasks"], (old) =>
+        old?.map((task) =>
+          task.id === id ? { ...task, status } : task
         )
       );
-    }
-  };
 
-  if (loading) {
+      return { previousTasks };
+    },
+
+    onError: (_err, _vars, ctx) => {
+      queryClient.setQueryData(["tasks"], ctx?.previousTasks);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+
+  /* ---------- Top bar ---------- */
+
+  useEffect(() => {
+    setTopBar({
+      total_tasks: (
+        <div>
+          <h1 className="font-bold text-xl">Tasks</h1>
+          <p>{tasks.length} total tasks</p>
+        </div>
+      ),
+      actions: <Button asChild>
+  <Link href="/tasks/new">Add Task</Link>
+</Button>,
+    });
+
+    return () =>
+      useTopBarStore.getState().setActions({
+        total_tasks: null,
+        actions: null,
+      });
+  }, [tasks.length, setTopBar]);
+
+  /* ---------- Loading & error ---------- */
+
+  if (tasksLoading || projectsLoading) {
     return (
       <div className="grid place-items-center h-screen">
         <Spinner className="size-16" />
@@ -110,49 +152,11 @@ export default function TasksList() {
     );
   }
 
-  const renderBadge = (status: string) => {
-    if (status === "in-progress")
-      return (
-        <Badge className="bg-amber-500/20 text-amber-600 rounded-md border-amber-600">
-          In Progress
-        </Badge>
-      );
-    if (status === "done")
-      return (
-        <Badge className="bg-green-500/20  text-green-600 rounded-md border-green-600">
-          Done
-        </Badge>
-      );
-    if (status === "todo")
-      return (
-        <Badge className="bg-gray-200/20  text-gray-900 rounded-md border-gray-600">
-          To Do
-        </Badge>
-      );
-
-    return <Badge>Status</Badge>;
-  };
-
-  const isDone = (status: string): boolean => {
-    if (status === "done") {
-      return true;
-    }
-    return false;
-  };
-
-  const projectName = (projectId: string): string => {
-    const project = projects.find((p => p.id === projectId));
-    return project ? project.name : "Project not found";
-  };
-
-  const renderPriorityFlag = (priority: string) => {
-    if (priority === "high") return <Flag className="text-red-600"/>
-    if (priority === "medium") return <Flag className="text-amber-600"/>
-    if (priority === "low") return <Flag className="text-blue-500"/>
-
-    return <Flag />
+  if (tasksError || projectsError) {
+    return <div>Error loading data</div>;
   }
 
+  /* ---------- UI ---------- */
 
   return (
     <div className="p-4">
@@ -166,7 +170,7 @@ export default function TasksList() {
 
         <div className="relative ml-auto">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="w-50 pl-10" placeholder="Search tasks..."></Input>
+          <Input className="pl-10" placeholder="Search tasks..." />
         </div>
       </div>
 
@@ -178,22 +182,26 @@ export default function TasksList() {
             <div key={task.id} className="p-4 border rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex gap-4 items-center">
-                  <div>
-                    <Checkbox
-                      checked={isDone(task.status)}
-                      onCheckedChange={() =>
-                        handleCheckboxChange(task.id, task.status)
-                      }
-                    />
-                  </div>
+                  <Checkbox
+                    checked={task.status === "done"}
+                    onCheckedChange={() =>
+                      updateTaskStatus.mutate({
+                        id: task.id,
+                        status:
+                          task.status === "done"
+                            ? "todo"
+                            : "done",
+                      })
+                    }
+                  />
+
                   <div>
                     <div className="flex gap-3">
                       <h3
                         className={cn(
                           "font-semibold",
-                          task.status === "done"
-                            ? "font-semibold line-through opacity-50"
-                            : ""
+                          task.status === "done" &&
+                            "line-through opacity-50"
                         )}
                       >
                         {task.title}
@@ -205,28 +213,30 @@ export default function TasksList() {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <div>
-                    <h4 className="text-xs border-2 py-1 px-2 rounded-md border-gray-100 bg-gray-100/50 text-gray-600">{projectName(task.projectId)}</h4>
-                  </div>
+
+                <div className="flex gap-3 items-center">
+                  <h4 className="text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600">
+                    {projectName(task.projectId)}
+                  </h4>
+
                   <div className="flex gap-1">
-                    <MessageSquare className="text-gray-500"/>
-                    <h4 className="text-[1rem]">{task.comments?.length}</h4>
+                    <MessageSquare className="text-gray-500" />
+                    <span>{task.comments?.length ?? 0}</span>
                   </div>
+
                   <div className="flex gap-1">
-                    <Paperclip className="text-gray-500"/>
-                    <h4>0</h4>
+                    <Paperclip className="text-gray-500" />
+                    <span>0</span>
                   </div>
-                  <div className="">
-                    {renderPriorityFlag(task.priority)}
-                  </div>
+
+                  {renderPriorityFlag(task.priority)}
+
                   <div className="flex gap-1">
-                    <Calendar className="text-gray-500"/>
-                    <h4 className="text-[1rem]">{formattedDate(task.dueDate)}</h4>
+                    <Calendar className="text-gray-500" />
+                    <span>{formattedDate(task.dueDate)}</span>
                   </div>
-                  <div>
-                    <h4>JD</h4>
-                  </div>
+
+                  <span>JD</span>
                 </div>
               </div>
             </div>

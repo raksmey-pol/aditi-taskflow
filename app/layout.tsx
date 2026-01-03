@@ -1,9 +1,12 @@
-import type { Metadata } from "next";
+'use client'
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { TopBar } from "@/components/top-bar";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,10 +18,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Task Manager",
-  description: "Manage your tasks efficiently",
-};
+
+const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -30,15 +31,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SidebarProvider>
+        <QueryClientProvider client={queryClient}>
+          <SidebarProvider>
           <AppSidebar />
           <main className="w-full">
             <TopBar>
-              <SidebarTrigger />
+              <SidebarTrigger/>
             </TopBar>
             {children}
           </main>
         </SidebarProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
       </body>
     </html>
   );

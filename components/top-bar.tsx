@@ -1,5 +1,5 @@
 "use client";
-import { useTopBarStore } from "@/app/stores/task-topbar.store";
+import { useTopBarStore } from "@/stores/task-topbar.store";
 import { Card, CardContent } from "./ui/card";
 
 export function TopBar({
