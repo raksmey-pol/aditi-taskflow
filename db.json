@@ -259,7 +259,7 @@
       "title": "Social media calendar",
       "description": "Plan Q1 social media content.",
       "projectId": "1",
-      "status": "done",
+      "status": "todo",
       "priority": "medium",
       "dueDate": "2025-01-08",
       "tags": [

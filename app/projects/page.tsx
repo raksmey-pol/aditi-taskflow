@@ -59,14 +59,11 @@ export default function Projects() {
               <div className="mt-4 flex items-center justify-between">
                 <p className="text-xs text-gray-500 mb-1">Progress</p>
                 <span className="text-sm text-gray-500 ">
-                  <Progress value={progress} className="w-[60%]" />
+                  {project.tasksCompleted}/{project.tasksTotal} tasks
                 </span>
               </div>
               <div className="w-full h-2 bg-gray-200 rounded-full">
-                <div
-                  className="h-2 bg-black rounded-full"
-                  style={{ width: `${progress}%` }}
-                />
+                <Progress value={progress} className="w-[60%]" />
               </div>
             </div>
 
