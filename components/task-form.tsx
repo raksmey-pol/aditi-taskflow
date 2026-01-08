@@ -65,6 +65,16 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
           <FieldError errors={[errors.description]} />
         </Field>
 
+        <Field data-invalid={!!errors.projectId}>
+          <FieldLabel htmlFor="projectId">Project ID</FieldLabel>
+          <Input
+            id="projectId"
+            {...register("projectId")}
+            placeholder="Enter project ID"
+          />
+          <FieldError errors={[errors.projectId]} />
+        </Field>
+
         <Field data-invalid={!!errors.priority}>
           <FieldLabel htmlFor="priority">Priority</FieldLabel>
           <Controller
@@ -86,20 +96,31 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
           <FieldError errors={[errors.priority]} />
         </Field>
 
+        <Field data-invalid={!!errors.priority}>
+          <FieldLabel htmlFor="status">Status</FieldLabel>
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todo">To Do</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          <FieldError errors={[errors.priority]} />
+        </Field>
+
         <Field data-invalid={!!errors.dueDate}>
           <FieldLabel htmlFor="dueDate">Due Date</FieldLabel>
           <Input id="dueDate" type="date" {...register("dueDate")} />
           <FieldError errors={[errors.dueDate]} />
-        </Field>
-
-        <Field data-invalid={!!errors.projectId}>
-          <FieldLabel htmlFor="projectId">Project ID</FieldLabel>
-          <Input
-            id="projectId"
-            {...register("projectId")}
-            placeholder="Enter project ID"
-          />
-          <FieldError errors={[errors.projectId]} />
         </Field>
 
         <Button type="submit" disabled={isSubmitting}>

@@ -1,4 +1,4 @@
-import tasks from "../../db/tasks.json";
+import data from "@/db.json"
 
 export default async function TaskById({ params }: { params: { id: string } }) {
   
