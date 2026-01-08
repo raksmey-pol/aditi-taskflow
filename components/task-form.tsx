@@ -14,8 +14,28 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskSchema, Task } from "@/validations/task.schema";
 import { useForm, Controller } from "react-hook-form";
+import { redirect, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
-export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
+export function TaskForm({
+  taskId,
+  onSuccess,
+}: {
+  taskId?: string;
+  onSuccess?: () => void;
+}) {
+  const isEdit = !!taskId;
+  const { data: task, isLoading } = useQuery({
+    queryKey: ["task", taskId],
+    queryFn: async () => {
+      const res = await fetch(`/api/tasks/${taskId}`);
+      if (!res.ok) throw new Error("Failed to fetch task");
+      return res.json();
+    },
+    enabled: isEdit,
+  });
+
   const {
     register,
     handleSubmit,
@@ -25,21 +45,52 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
   } = useForm<Task>({
     resolver: zodResolver(taskSchema),
     mode: "onChange",
-    defaultValues: {
-      priority: undefined
-    }
+    // defaultValues: {
+    //   priority: undefined,
+    //   status: undefined,
+    // }
   });
 
-  const onSubmit = async (data: Task) => {
-    await fetch("/api/tasks", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" },
-    });
+  useEffect(() => {
+    if (task) {
+      reset({
+        taskId: task.id,
+        title: task.title,
+        description: task.description,
+        projectId: task.projectId,
+        priority: task.priority,
+        status: task.status,
+        dueDate: task.dueDate,
+      });
+    }
+  }, [task, reset]);
 
+  const router = useRouter();
+  const onSubmit = async (data: Task) => {
+    if (isEdit) {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      console.log("is Edit Triggered");
+    } else {
+      await fetch("/api/tasks", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      console.log("is Created Triggered");
+    }
     reset();
     onSuccess?.();
+    router.push("/tasks");
   };
+
+  if (isEdit && isLoading) {
+    return <div>Loading task…</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -81,7 +132,12 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
             name="priority"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                key={`priority-${field.value}`}
+                onValueChange={field.onChange}
+                value={field.value}
+                defaultValue={field.value}
+              >
                 <SelectTrigger id="priority">
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
@@ -96,13 +152,18 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
           <FieldError errors={[errors.priority]} />
         </Field>
 
-        <Field data-invalid={!!errors.priority}>
+        <Field data-invalid={!!errors.status}>
           <FieldLabel htmlFor="status">Status</FieldLabel>
           <Controller
             name="status"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                key={`status-${field.value}`}
+                onValueChange={field.onChange}
+                value={field.value}
+                defaultValue={field.value}
+              >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
@@ -114,7 +175,7 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
               </Select>
             )}
           />
-          <FieldError errors={[errors.priority]} />
+          <FieldError errors={[errors.status]} />
         </Field>
 
         <Field data-invalid={!!errors.dueDate}>
@@ -124,7 +185,13 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
         </Field>
 
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Task"}
+          {isEdit
+            ? isSubmitting
+              ? "Editing..."
+              : "Edit Task"
+            : isSubmitting
+            ? "Creating..."
+            : "Create Task"}
         </Button>
       </FieldSet>
     </form>
