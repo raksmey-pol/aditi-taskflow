@@ -14,8 +14,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskSchema, Task } from "@/validations/task.schema";
 import { useForm, Controller } from "react-hook-form";
-import { redirect, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 export function TaskForm({
@@ -26,6 +26,9 @@ export function TaskForm({
   onSuccess?: () => void;
 }) {
   const isEdit = !!taskId;
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const { data: task, isLoading } = useQuery({
     queryKey: ["task", taskId],
     queryFn: async () => {
@@ -40,15 +43,48 @@ export function TaskForm({
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset,
   } = useForm<Task>({
     resolver: zodResolver(taskSchema),
     mode: "onChange",
-    // defaultValues: {
-    //   priority: undefined,
-    //   status: undefined,
-    // }
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: async (data: Task) => {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to create task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      reset();
+      onSuccess?.();
+      router.push("/tasks");
+    },
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: async (data: Task) => {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to update task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
+      reset();
+      onSuccess?.();
+      router.push("/tasks");
+    },
   });
 
   useEffect(() => {
@@ -65,28 +101,16 @@ export function TaskForm({
     }
   }, [task, reset]);
 
-  const router = useRouter();
   const onSubmit = async (data: Task) => {
     if (isEdit) {
-      await fetch(`/api/tasks/${taskId}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      console.log("is Edit Triggered");
+      updateTaskMutation.mutate(data);
     } else {
-      await fetch("/api/tasks", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
-      console.log("is Created Triggered");
+      createTaskMutation.mutate(data);
     }
-    reset();
-    onSuccess?.();
-    router.push("/tasks");
   };
+
+  const isSubmitting =
+    createTaskMutation.isPending || updateTaskMutation.isPending;
 
   if (isEdit && isLoading) {
     return <div>Loading task…</div>;
