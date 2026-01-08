@@ -279,16 +279,6 @@
         }
       ],
       "comments": []
-    },
-    {
-      "taskId": "5145",
-      "title": "Task 1",
-      "description": "This is the task that you need to do today",
-      "projectId": "1",
-      "priority": "high",
-      "status": "done",
-      "dueDate": "2026-01-30",
-      "id": "5145"
     }
   ]
 }
