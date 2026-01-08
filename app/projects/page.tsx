@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { GET } from "../api/projects/route";
 import { Avatar, AvatarFallback} from "@/components/ui/avatar"
@@ -33,9 +34,10 @@ export default function Projects() {
         const progress =
           (project.tasksCompleted / project.tasksTotal) * 100;
         return (
-          <div
+          <Link
             key={project.id}
-            className="bg-white rounded-lg border p-5"
+            href={`/projects/${project.id}`}
+            className="bg-white rounded-lg border p-5 block"
           >
             {/* Header */}
             <div className="flex items-start justify-between">
@@ -84,7 +86,7 @@ export default function Projects() {
 
               <span>{project.dueDate}</span>
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>
