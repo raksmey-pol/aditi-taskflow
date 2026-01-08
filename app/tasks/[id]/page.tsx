@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { renderBadge } from "@/utils/render-badge.util";
 import { renderPriorityFlag } from "@/utils/render-priority.util";
 import formattedDate from "@/utils/date.util";
-import { Calendar, MessageSquare, Tag, ArrowLeft, Pencil } from "lucide-react";
+import { Calendar, MessageSquare, Tag, ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import {
   Tooltip,
@@ -105,7 +105,8 @@ export default function TaskById() {
             <div className="flex-1">
               <div className="flex justify-between">
                 <h1 className="text-3xl font-bold mb-2">{task.title}</h1>
-                <Tooltip>
+                <div className="flex gap-4">
+                  <Tooltip>
                   <TooltipTrigger asChild>
                     <Link href={`/tasks/${task.id}/edit`}>
                       <Pencil />
@@ -115,6 +116,18 @@ export default function TaskById() {
                     <p>Edit Task</p>
                   </TooltipContent>
                 </Tooltip>
+                <p>|</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link href={`/tasks/${task.id}/edit`}>
+                      <Trash2 />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete Task</p>
+                  </TooltipContent>
+                </Tooltip>
+                </div>
               </div>
               <div className="flex gap-2 items-center flex-wrap">
                 {renderBadge(task.status)}
