@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Pencil,
   Trash2,
+  Flag,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -34,7 +35,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const fetchTask = async (id: string): Promise<Task> => {
   const res = await fetch(`/api/tasks`);
@@ -88,8 +99,7 @@ export default function TaskById() {
   });
 
   const handleDelete = () => {
-      deleteTaskMutation.mutate();
-
+    deleteTaskMutation.mutate();
   };
 
   if (taskLoading) {
@@ -141,7 +151,7 @@ export default function TaskById() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link href={`/tasks/${task.id}/edit`}>
-                        <Pencil />
+                        <span className="cursor-pointer hover:text-blue-500 transition-colors"><Pencil /></span>
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -151,27 +161,34 @@ export default function TaskById() {
                   <p>|</p>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div> <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button
-                        className="cursor-pointer hover:text-red-500 transition-colors">
-                        <Trash2 />
-                      </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete your
-                              task and remove its data from our servers.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog></div>
+                      <div>
+                        {" "}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button className="cursor-pointer hover:text-red-500 transition-colors">
+                              <Trash2 />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete your task and remove its data
+                                from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleDelete}>
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Delete Task</p>
@@ -216,6 +233,11 @@ export default function TaskById() {
                     </Badge>
                   ))}
                 </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Flag className="h-4 w-4 text-muted-foreground"></Flag>
+                <span className="text-sm font-medium">Priority:</span>
+                <span className="text-sm">{task.priority}</span>
               </div>
             </CardContent>
           </Card>
