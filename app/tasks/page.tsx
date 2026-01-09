@@ -179,113 +179,129 @@ export default function TasksList() {
   /* ---------- UI ---------- */
 
   return (
-    <div className="p-4">
-      <div className="flex">
-        <div className="flex gap-3">
-          <Button
-            variant={statusFilter === null ? "default" : "outline"}
-            onClick={() => setStatusFilter(null)}
-          >
-            All
-          </Button>
-          <Button
-            variant={statusFilter === "todo" ? "default" : "outline"}
-            onClick={() => setStatusFilter("todo")}
-          >
-            Todo
-          </Button>
-          <Button
-            variant={statusFilter === "in-progress" ? "default" : "outline"}
-            onClick={() => setStatusFilter("in-progress")}
-          >
-            In Progress
-          </Button>
-          <Button
-            variant={statusFilter === "done" ? "default" : "outline"}
-            onClick={() => setStatusFilter("done")}
-          >
-            Done
-          </Button>
-        </div>
-
-        <div className="relative ml-auto">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-10"
-            placeholder="Search tasks..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+  <div className="p-4">
+    {/* Filters + Search */}
+    <div className="flex">
+      <div className="flex gap-3">
+        <Button
+          variant={statusFilter === null ? "default" : "outline"}
+          onClick={() => setStatusFilter(null)}
+        >
+          All
+        </Button>
+        <Button
+          variant={statusFilter === "todo" ? "default" : "outline"}
+          onClick={() => setStatusFilter("todo")}
+        >
+          Todo
+        </Button>
+        <Button
+          variant={statusFilter === "in-progress" ? "default" : "outline"}
+          onClick={() => setStatusFilter("in-progress")}
+        >
+          In Progress
+        </Button>
+        <Button
+          variant={statusFilter === "done" ? "default" : "outline"}
+          onClick={() => setStatusFilter("done")}
+        >
+          Done
+        </Button>
       </div>
 
-      <div className="mt-6 space-y-4">
-        {filteredTasks.length === 0 ? (
-          <p className="text-muted-foreground">No tasks found</p>
-        ) : (
-          filteredTasks.map((task) => (
-            <div key={task.id} className="p-4 border rounded-lg">
-              <Link href={`/tasks/${task.id}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-4 items-center">
-                    <Checkbox
-                      checked={task.status === "done"}
-                      onCheckedChange={() =>
-                        updateTaskStatus.mutate({
-                          id: task.id,
-                          status: task.status === "done" ? "todo" : "done",
-                        })
-                      }
-                    />
-
-                    <div>
-                      <div className="flex gap-3">
-                        <h3
-                          className={cn(
-                            "font-semibold",
-                            task.status === "done" && "line-through opacity-50"
-                          )}
-                        >
-                          {task.title}
-                        </h3>
-                        {renderBadge(task.status)}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {task.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 items-center">
-                    <h4 className="text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600">
-                      {projectName(task.projectId)}
-                    </h4>
-
-                    <div className="flex gap-1">
-                      <MessageSquare className="text-gray-500" />
-                      <span>{task.comments?.length ?? 0}</span>
-                    </div>
-
-                    <div className="flex gap-1">
-                      <Paperclip className="text-gray-500" />
-                      <span>0</span>
-                    </div>
-
-                    {renderPriorityFlag(task.priority)}
-
-                    <div className="flex gap-1">
-                      <Calendar className="text-gray-500" />
-                      <span>{formattedDate(task.dueDate)}</span>
-                    </div>
-
-                    <span>JD</span>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          ))
-        )}
+      <div className="relative ml-auto">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="pl-10"
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
     </div>
-  );
+
+    {/* Tasks */}
+    <div className="mt-6 space-y-4">
+      {filteredTasks.length === 0 ? (
+        <p className="text-muted-foreground">No tasks found</p>
+      ) : (
+        filteredTasks.map((task) => (
+          <div key={task.id} className="p-4 border rounded-lg hover:bg-muted/30 transition">
+            <div className="flex items-center justify-between">
+
+              {/* LEFT SIDE */}
+              <div className="flex gap-4 items-center flex-1">
+
+                {/* Checkbox (NOT clickable for navigation) */}
+                <Checkbox
+                  checked={task.status === "done"}
+                  onCheckedChange={() =>
+                    updateTaskStatus.mutate({
+                      id: task.id,
+                      status: task.status === "done" ? "todo" : "done",
+                    })
+                  }
+                />
+
+                {/* Title + Description = clickable */}
+                <Link
+                  href={`/tasks/${task.id}`}
+                  className="flex-1 cursor-pointer"
+                >
+                  <div>
+                    <div className="flex gap-3 items-center">
+                      <h3
+                        className={cn(
+                          "font-semibold",
+                          task.status === "done" && "line-through opacity-50"
+                        )}
+                      >
+                        {task.title}
+                      </h3>
+                      {renderBadge(task.status)}
+                    </div>
+
+                    <p className="text-sm text-muted-foreground">
+                      {task.description}
+                    </p>
+                  </div>
+                </Link>
+              </div>
+
+              {/* RIGHT SIDE (also clickable) */}
+              <Link
+                href={`/tasks/${task.id}`}
+                className="flex gap-4 items-center text-sm text-muted-foreground cursor-pointer"
+              >
+                <h4 className="text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600">
+                  {projectName(task.projectId)}
+                </h4>
+
+                <div className="flex gap-1 items-center">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{task.comments?.length ?? 0}</span>
+                </div>
+
+                <div className="flex gap-1 items-center">
+                  <Paperclip className="h-4 w-4" />
+                  <span>0</span>
+                </div>
+
+                {renderPriorityFlag(task.priority)}
+
+                <div className="flex gap-1 items-center">
+                  <Calendar className="h-4 w-4" />
+                  <span>{formattedDate(task.dueDate)}</span>
+                </div>
+
+                <span>JD</span>
+              </Link>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+);
+
 }
