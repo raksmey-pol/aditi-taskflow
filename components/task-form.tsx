@@ -14,32 +14,107 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskSchema, Task } from "@/validations/task.schema";
 import { useForm, Controller } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
-export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
+export function TaskForm({
+  taskId,
+  onSuccess,
+}: {
+  taskId?: string;
+  onSuccess?: () => void;
+}) {
+  const isEdit = !!taskId;
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const { data: task, isLoading } = useQuery({
+    queryKey: ["task", taskId],
+    queryFn: async () => {
+      const res = await fetch(`/api/tasks/${taskId}`);
+      if (!res.ok) throw new Error("Failed to fetch task");
+      return res.json();
+    },
+    enabled: isEdit,
+  });
+
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset,
   } = useForm<Task>({
     resolver: zodResolver(taskSchema),
     mode: "onChange",
-    defaultValues: {
-      priority: undefined
-    }
   });
 
-  const onSubmit = async (data: Task) => {
-    await fetch("/api/tasks", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" },
-    });
+  const createTaskMutation = useMutation({
+    mutationFn: async (data: Task) => {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to create task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      reset();
+      onSuccess?.();
+      router.push("/tasks");
+    },
+  });
 
-    reset();
-    onSuccess?.();
+  const updateTaskMutation = useMutation({
+    mutationFn: async (data: Task) => {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to update task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
+      reset();
+      onSuccess?.();
+      router.push("/tasks");
+    },
+  });
+
+  useEffect(() => {
+    if (task) {
+      reset({
+        taskId: task.id,
+        title: task.title,
+        description: task.description,
+        projectId: task.projectId,
+        priority: task.priority,
+        status: task.status,
+        dueDate: task.dueDate,
+      });
+    }
+  }, [task, reset]);
+
+  const onSubmit = async (data: Task) => {
+    if (isEdit) {
+      updateTaskMutation.mutate(data);
+    } else {
+      createTaskMutation.mutate(data);
+    }
   };
+
+  const isSubmitting =
+    createTaskMutation.isPending || updateTaskMutation.isPending;
+
+  if (isEdit && isLoading) {
+    return <div>Loading task…</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -81,7 +156,12 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
             name="priority"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                key={`priority-${field.value}`}
+                onValueChange={field.onChange}
+                value={field.value}
+                defaultValue={field.value}
+              >
                 <SelectTrigger id="priority">
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
@@ -96,13 +176,18 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
           <FieldError errors={[errors.priority]} />
         </Field>
 
-        <Field data-invalid={!!errors.priority}>
+        <Field data-invalid={!!errors.status}>
           <FieldLabel htmlFor="status">Status</FieldLabel>
           <Controller
             name="status"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select
+                key={`status-${field.value}`}
+                onValueChange={field.onChange}
+                value={field.value}
+                defaultValue={field.value}
+              >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
@@ -114,7 +199,7 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
               </Select>
             )}
           />
-          <FieldError errors={[errors.priority]} />
+          <FieldError errors={[errors.status]} />
         </Field>
 
         <Field data-invalid={!!errors.dueDate}>
@@ -124,7 +209,13 @@ export function TaskForm({ onSuccess }: { onSuccess?: () => void }) {
         </Field>
 
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Task"}
+          {isEdit
+            ? isSubmitting
+              ? "Editing..."
+              : "Edit Task"
+            : isSubmitting
+            ? "Creating..."
+            : "Create Task"}
         </Button>
       </FieldSet>
     </form>

@@ -180,6 +180,7 @@ export default function TasksList() {
         ) : (
           tasks.map((task) => (
             <div key={task.id} className="p-4 border rounded-lg">
+              <Link href={`/tasks/${task.id}`}>
               <div className="flex items-center justify-between">
                 <div className="flex gap-4 items-center">
                   <Checkbox
@@ -238,7 +239,7 @@ export default function TasksList() {
 
                   <span>JD</span>
                 </div>
-              </div>
+              </div></Link>
             </div>
           ))
         )}
