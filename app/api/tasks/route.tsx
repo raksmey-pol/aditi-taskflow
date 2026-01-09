@@ -19,7 +19,7 @@ export async function GET() {
     const data = await response.json();
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch tasks" },
       { status: 500 }
@@ -42,7 +42,7 @@ export async function PATCH(request: Request) {
     const data = await response.json();
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update task" },
       { status: 500 }
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     }
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to create task" },
       { status: 500 }

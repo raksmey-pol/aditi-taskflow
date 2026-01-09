@@ -2,13 +2,7 @@
 import { useTopBarStore } from "@/stores/task-topbar.store";
 import { Card, CardContent } from "./ui/card";
 
-export function TopBar({
-  children,
-  title,
-}: {
-  children?: React.ReactNode;
-  title?: React.ReactNode;
-}) {
+export function TopBar() {
   const { actions, total_tasks } = useTopBarStore(); // Get actions from store
 
   return (

@@ -143,7 +143,7 @@
       "title": "Performance optimization",
       "description": "Improve dashboard page load times to under 2 seconds.",
       "projectId": "3",
-      "status": "in-progress",
+      "status": "done",
       "priority": "high",
       "dueDate": "2025-01-22",
       "tags": [
@@ -195,7 +195,7 @@
       "title": "Mobile app wireframes",
       "description": "Create wireframes for iOS and Android app.",
       "projectId": "2",
-      "status": "in-progress",
+      "status": "todo",
       "priority": "high",
       "dueDate": "2025-01-18",
       "tags": [
