@@ -1,14 +1,7 @@
 "use client";
 
-<<<<<<< HEAD
-export default async function TaskById({ params }: { params: { id: string } }) {
-  
-  const param = await params;
-  const task = data.tasks.find((task) => task.id === param.id);
-  if (!task) return <h1>Task not found</h1>;
-=======
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Task } from "@/interfaces/task.interface";
 import { Project } from "@/interfaces/project.interface";
 import { Spinner } from "@/components/ui/spinner";
@@ -26,14 +19,22 @@ import { Separator } from "@/components/ui/separator";
 import { renderBadge } from "@/utils/render-badge.util";
 import { renderPriorityFlag } from "@/utils/render-priority.util";
 import formattedDate from "@/utils/date.util";
-import { Calendar, MessageSquare, Tag, ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  MessageSquare,
+  Tag,
+  ArrowLeft,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
->>>>>>> 3cec64b4896516b9f0a9fbbbc09e4eb5c44145c3
+import { useRouter } from "next/navigation";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const fetchTask = async (id: string): Promise<Task> => {
   const res = await fetch(`/api/tasks`);
@@ -53,6 +54,8 @@ const fetchProjects = async (): Promise<Project[]> => {
 export default function TaskById() {
   const params = useParams();
   const id = params.id as string;
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
   const {
     data: task,
@@ -67,6 +70,27 @@ export default function TaskById() {
     queryKey: ["projects"],
     queryFn: fetchProjects,
   });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to delete task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      router.push("/tasks");
+    },
+  });
+
+  const handleDelete = () => {
+      deleteTaskMutation.mutate();
+
+  };
 
   if (taskLoading) {
     return (
@@ -115,26 +139,44 @@ export default function TaskById() {
                 <h1 className="text-3xl font-bold mb-2">{task.title}</h1>
                 <div className="flex gap-4">
                   <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href={`/tasks/${task.id}/edit`}>
-                      <Pencil />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Edit Task</p>
-                  </TooltipContent>
-                </Tooltip>
-                <p>|</p>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href={`/tasks/${task.id}/edit`}>
-                      <Trash2 />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete Task</p>
-                  </TooltipContent>
-                </Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href={`/tasks/${task.id}/edit`}>
+                        <Pencil />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Edit Task</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <p>|</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div> <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                        className="cursor-pointer hover:text-red-500 transition-colors">
+                        <Trash2 />
+                      </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete your
+                              task and remove its data from our servers.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog></div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Delete Task</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
               <div className="flex gap-2 items-center flex-wrap">

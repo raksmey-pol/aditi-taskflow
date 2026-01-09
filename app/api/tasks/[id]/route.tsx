@@ -60,3 +60,31 @@ export async function PUT(
     );
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = await params;
+
+    const response = await fetch(`http://localhost:3001/tasks/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "Failed to delete task" },
+        { status: 500 }
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
