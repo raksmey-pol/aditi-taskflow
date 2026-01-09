@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   CheckSquare,
+  Dot,
   FolderKanban,
   Home,
   LayoutDashboard,
@@ -23,6 +24,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useQuery } from "@tanstack/react-query";
+import { Project } from "@/interfaces/project.interface";
+import { Separator } from "@radix-ui/react-separator";
+import { colorMap } from "@/utils/color-map.util";
 
 const navItems = [
   {
@@ -42,7 +47,17 @@ const navItems = [
   },
 ];
 
+
+
 export function AppSidebar() {
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects"],
+    queryFn: async (): Promise<Project[]> => {
+      const res = await fetch("/api/projects");
+      if (!res.ok) throw new Error("Failed to fetch projects");
+      return res.json();
+    }
+  });
   const pathname = usePathname();
 
   return (
@@ -56,7 +71,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>MENU</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
@@ -71,6 +86,21 @@ export function AppSidebar() {
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
+          <SidebarGroupLabel>PROJECTS</SidebarGroupLabel>
+              <SidebarMenu>
+                          <SidebarGroupContent>
+              {projects.map((project) => (
+                 <SidebarMenuItem key={project.id}>
+                  <SidebarMenuButton asChild >
+                    <Link href={`/projects/${project.id}`}>
+                      <span><Dot className={`size-8 ${colorMap[project.color]}`}/></span>
+                      <span>{project.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+          </SidebarGroupContent>
+              </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
