@@ -3,8 +3,13 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { GET } from "../api/projects/route";
-import { Avatar, AvatarFallback} from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { useTopBarStore } from "@/stores/task-topbar.store";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/loading-state";
+import { ErrorState } from "@/components/error-state";
 
 interface Project {
   id: string;
@@ -17,22 +22,59 @@ interface Project {
 }
 
 export default function Projects() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['projects'],
+  const {
+    data: projects = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["projects"],
     queryFn: async () => {
       const response = await GET();
       return response.json();
     },
   });
 
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>Error loading projects</p>;
+  const setTopBar = useTopBarStore((s) => s.setActions);
+
+  useEffect(() => {
+    setTopBar({
+      total_tasks: (
+        <div>
+          <h1 className="font-bold text-xl">Projects</h1>
+          <p>{projects.length} total project</p>
+        </div>
+      ),
+      actions: (
+        <Button asChild>
+          <Link href="">New Project</Link>
+        </Button>
+      ),
+    });
+
+    return () =>
+      useTopBarStore.getState().setActions({
+        total_tasks: null,
+        actions: null,
+      });
+  }, [projects.length, setTopBar]);
+
+  if (isLoading)
+    return <LoadingState message="Loading projects..." fullScreen />;
+  if (error)
+    return (
+      <ErrorState
+        title="Failed to load projects"
+        message="We couldn't load your projects. Please try again."
+        onRetry={refetch}
+        fullScreen
+      />
+    );
 
   return (
-    <div className="space-y-6">
-      {data.map((project: Project) => {
-        const progress =
-          (project.tasksCompleted / project.tasksTotal) * 100;
+    <div className="space-y-6 p-8">
+      {projects.map((project: Project) => {
+        const progress = (project.tasksCompleted / project.tasksTotal) * 100;
         return (
           <Link
             key={project.id}
@@ -43,9 +85,7 @@ export default function Projects() {
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`w-3 h-3 rounded-full ${project.color}`}
-                  />
+                  <span className={`w-3 h-3 rounded-full ${project.color}`} />
                   <h3 className="font-semibold text-gray-900">
                     {project.name}
                   </h3>
@@ -74,13 +114,19 @@ export default function Projects() {
               <div className="flex -space-x-2">
                 {/* fake avatars like your UI */}
                 <Avatar>
-                    <AvatarFallback className="bg-indigo-500  text-white" >JD</AvatarFallback>
+                  <AvatarFallback className="bg-indigo-500  text-white">
+                    JD
+                  </AvatarFallback>
                 </Avatar>
                 <Avatar>
-                    <AvatarFallback className="bg-indigo-500  text-white" >AK</AvatarFallback>
+                  <AvatarFallback className="bg-indigo-500  text-white">
+                    AK
+                  </AvatarFallback>
                 </Avatar>
                 <Avatar>
-                    <AvatarFallback className="bg-indigo-500  text-white" >SL</AvatarFallback>
+                  <AvatarFallback className="bg-indigo-500  text-white">
+                    SL
+                  </AvatarFallback>
                 </Avatar>
               </div>
 

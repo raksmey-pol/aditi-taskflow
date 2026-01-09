@@ -2,22 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LoadingState } from "@/components/loading-state";
+import { ErrorState } from "@/components/error-state";
 
-import {
-  Calendar,
-  MessageSquare,
-  Paperclip,
-  Search,
-} from "lucide-react";
+import { Calendar, MessageSquare, Paperclip, Search } from "lucide-react";
 
-import { useEffect, useMemo } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { cn } from "@/lib/utils";
 import formattedDate from "@/utils/date.util";
@@ -47,6 +39,8 @@ const fetchProjects = async (): Promise<Project[]> => {
 export default function TasksList() {
   const queryClient = useQueryClient();
   const setTopBar = useTopBarStore((s) => s.setActions);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   /* ---------- Queries ---------- */
 
@@ -54,6 +48,7 @@ export default function TasksList() {
     data: tasks = [],
     isLoading: tasksLoading,
     isError: tasksError,
+    refetch: refetchTasks,
   } = useQuery({
     queryKey: ["tasks"],
     queryFn: fetchTasks,
@@ -63,6 +58,7 @@ export default function TasksList() {
     data: projects = [],
     isLoading: projectsLoading,
     isError: projectsError,
+    refetch: refetchProjects,
   } = useQuery({
     queryKey: ["projects"],
     queryFn: fetchProjects,
@@ -74,19 +70,36 @@ export default function TasksList() {
     return new Map(projects.map((p) => [p.id, p.name]));
   }, [projects]);
 
-  const projectName = (id: string) =>
-    projectMap.get(id) ?? "Project not found";
+  const projectName = (id: string) => projectMap.get(id) ?? "Project not found";
+
+  /* ---------- Filter and Search ---------- */
+
+  const filteredTasks = useMemo(() => {
+    let filtered = tasks;
+
+    // Apply status filter
+    if (statusFilter) {
+      filtered = filtered.filter((task) => task.status === statusFilter);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (task) =>
+          task.title.toLowerCase().includes(query) ||
+          task.description.toLowerCase().includes(query) ||
+          projectName(task.projectId).toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [tasks, statusFilter, searchQuery, projectName]);
 
   /* ---------- Mutation (optimistic update) ---------- */
 
   const updateTaskStatus = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: string;
-    }) => {
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const res = await fetch("/api/tasks", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -99,13 +112,10 @@ export default function TasksList() {
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: ["tasks"] });
 
-      const previousTasks =
-        queryClient.getQueryData<Task[]>(["tasks"]);
+      const previousTasks = queryClient.getQueryData<Task[]>(["tasks"]);
 
       queryClient.setQueryData<Task[]>(["tasks"], (old) =>
-        old?.map((task) =>
-          task.id === id ? { ...task, status } : task
-        )
+        old?.map((task) => (task.id === id ? { ...task, status } : task))
       );
 
       return { previousTasks };
@@ -127,12 +137,16 @@ export default function TasksList() {
       total_tasks: (
         <div>
           <h1 className="font-bold text-xl">Tasks</h1>
-          <p>{tasks.length} total tasks</p>
+          <p>
+            {filteredTasks.length} of {tasks.length} tasks
+          </p>
         </div>
       ),
-      actions: <Button asChild>
-  <Link href="/tasks/new">Add Task</Link>
-</Button>,
+      actions: (
+        <Button asChild>
+          <Link href="/tasks/new">Add Task</Link>
+        </Button>
+      ),
     });
 
     return () =>
@@ -140,20 +154,26 @@ export default function TasksList() {
         total_tasks: null,
         actions: null,
       });
-  }, [tasks.length, setTopBar]);
+  }, [filteredTasks.length, tasks.length, setTopBar]);
 
   /* ---------- Loading & error ---------- */
 
   if (tasksLoading || projectsLoading) {
-    return (
-      <div className="grid place-items-center h-screen">
-        <Spinner className="size-16" />
-      </div>
-    );
+    return <LoadingState message="Loading tasks..." fullScreen />;
   }
 
   if (tasksError || projectsError) {
-    return <div>Error loading data</div>;
+    return (
+      <ErrorState
+        title="Failed to load tasks"
+        message="We couldn't load your tasks. Please check your connection and try again."
+        onRetry={() => {
+          refetchTasks();
+          refetchProjects();
+        }}
+        fullScreen
+      />
+    );
   }
 
   /* ---------- UI ---------- */
@@ -162,84 +182,106 @@ export default function TasksList() {
     <div className="p-4">
       <div className="flex">
         <div className="flex gap-3">
-          <Button variant="outline">All</Button>
-          <Button variant="outline">Todo</Button>
-          <Button variant="outline">In Progress</Button>
-          <Button variant="outline">Done</Button>
+          <Button
+            variant={statusFilter === null ? "default" : "outline"}
+            onClick={() => setStatusFilter(null)}
+          >
+            All
+          </Button>
+          <Button
+            variant={statusFilter === "todo" ? "default" : "outline"}
+            onClick={() => setStatusFilter("todo")}
+          >
+            Todo
+          </Button>
+          <Button
+            variant={statusFilter === "in-progress" ? "default" : "outline"}
+            onClick={() => setStatusFilter("in-progress")}
+          >
+            In Progress
+          </Button>
+          <Button
+            variant={statusFilter === "done" ? "default" : "outline"}
+            onClick={() => setStatusFilter("done")}
+          >
+            Done
+          </Button>
         </div>
 
         <div className="relative ml-auto">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-10" placeholder="Search tasks..." />
+          <Input
+            className="pl-10"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
 
       <div className="mt-6 space-y-4">
-        {tasks.length === 0 ? (
+        {filteredTasks.length === 0 ? (
           <p className="text-muted-foreground">No tasks found</p>
         ) : (
-          tasks.map((task) => (
+          filteredTasks.map((task) => (
             <div key={task.id} className="p-4 border rounded-lg">
               <Link href={`/tasks/${task.id}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-4 items-center">
-                  <Checkbox
-                    checked={task.status === "done"}
-                    onCheckedChange={() =>
-                      updateTaskStatus.mutate({
-                        id: task.id,
-                        status:
-                          task.status === "done"
-                            ? "todo"
-                            : "done",
-                      })
-                    }
-                  />
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-4 items-center">
+                    <Checkbox
+                      checked={task.status === "done"}
+                      onCheckedChange={() =>
+                        updateTaskStatus.mutate({
+                          id: task.id,
+                          status: task.status === "done" ? "todo" : "done",
+                        })
+                      }
+                    />
 
-                  <div>
-                    <div className="flex gap-3">
-                      <h3
-                        className={cn(
-                          "font-semibold",
-                          task.status === "done" &&
-                            "line-through opacity-50"
-                        )}
-                      >
-                        {task.title}
-                      </h3>
-                      {renderBadge(task.status)}
+                    <div>
+                      <div className="flex gap-3">
+                        <h3
+                          className={cn(
+                            "font-semibold",
+                            task.status === "done" && "line-through opacity-50"
+                          )}
+                        >
+                          {task.title}
+                        </h3>
+                        {renderBadge(task.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {task.description}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {task.description}
-                    </p>
+                  </div>
+
+                  <div className="flex gap-3 items-center">
+                    <h4 className="text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600">
+                      {projectName(task.projectId)}
+                    </h4>
+
+                    <div className="flex gap-1">
+                      <MessageSquare className="text-gray-500" />
+                      <span>{task.comments?.length ?? 0}</span>
+                    </div>
+
+                    <div className="flex gap-1">
+                      <Paperclip className="text-gray-500" />
+                      <span>0</span>
+                    </div>
+
+                    {renderPriorityFlag(task.priority)}
+
+                    <div className="flex gap-1">
+                      <Calendar className="text-gray-500" />
+                      <span>{formattedDate(task.dueDate)}</span>
+                    </div>
+
+                    <span>JD</span>
                   </div>
                 </div>
-
-                <div className="flex gap-3 items-center">
-                  <h4 className="text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600">
-                    {projectName(task.projectId)}
-                  </h4>
-
-                  <div className="flex gap-1">
-                    <MessageSquare className="text-gray-500" />
-                    <span>{task.comments?.length ?? 0}</span>
-                  </div>
-
-                  <div className="flex gap-1">
-                    <Paperclip className="text-gray-500" />
-                    <span>0</span>
-                  </div>
-
-                  {renderPriorityFlag(task.priority)}
-
-                  <div className="flex gap-1">
-                    <Calendar className="text-gray-500" />
-                    <span>{formattedDate(task.dueDate)}</span>
-                  </div>
-
-                  <span>JD</span>
-                </div>
-              </div></Link>
+              </Link>
             </div>
           ))
         )}

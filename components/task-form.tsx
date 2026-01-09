@@ -17,6 +17,8 @@ import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { LoadingState } from "@/components/loading-state";
+import { ErrorState } from "@/components/error-state";
 
 export function TaskForm({
   taskId,
@@ -29,7 +31,12 @@ export function TaskForm({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data: task, isLoading } = useQuery({
+  const {
+    data: task,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["task", taskId],
     queryFn: async () => {
       const res = await fetch(`/api/tasks/${taskId}`);
@@ -113,7 +120,17 @@ export function TaskForm({
     createTaskMutation.isPending || updateTaskMutation.isPending;
 
   if (isEdit && isLoading) {
-    return <div>Loading task…</div>;
+    return <LoadingState message="Loading task form..." />;
+  }
+
+  if (isEdit && isError) {
+    return (
+      <ErrorState
+        title="Failed to load task"
+        message="We couldn't load the task data. Please try again."
+        onRetry={refetch}
+      />
+    );
   }
 
   return (

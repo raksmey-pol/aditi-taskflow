@@ -4,8 +4,9 @@ import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Task } from "@/interfaces/task.interface";
 import { Project } from "@/interfaces/project.interface";
-import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
+import { LoadingState } from "@/components/loading-state";
+import { ErrorState } from "@/components/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -72,6 +73,7 @@ export default function TaskById() {
     data: task,
     isLoading: taskLoading,
     isError: taskError,
+    refetch: refetchTask,
   } = useQuery({
     queryKey: ["task", id],
     queryFn: () => fetchTask(id),
@@ -103,24 +105,17 @@ export default function TaskById() {
   };
 
   if (taskLoading) {
-    return (
-      <div className="grid place-items-center h-screen">
-        <Spinner className="size-16" />
-      </div>
-    );
+    return <LoadingState message="Loading task..." fullScreen />;
   }
 
   if (taskError || !task) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold">Task not found</h1>
-        <Button asChild className="mt-4">
-          <Link href="/tasks">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Tasks
-          </Link>
-        </Button>
-      </div>
+      <ErrorState
+        title="Task not found"
+        message="We couldn't find the task you're looking for."
+        onRetry={refetchTask}
+        fullScreen
+      />
     );
   }
 
@@ -151,7 +146,9 @@ export default function TaskById() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Link href={`/tasks/${task.id}/edit`}>
-                        <span className="cursor-pointer hover:text-blue-500 transition-colors"><Pencil /></span>
+                        <span className="cursor-pointer hover:text-blue-500 transition-colors">
+                          <Pencil />
+                        </span>
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>
